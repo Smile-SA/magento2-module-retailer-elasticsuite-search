@@ -218,6 +218,8 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
     /**
      * Redefined to delete filter attribute_set_id
      *
+     * @SuppressWarnings(PHPMD.CamelCaseMethodName)
+     *
      * {@inheritDoc}
      */
     protected function _construct()
