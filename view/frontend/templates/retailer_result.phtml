@@ -1,0 +1,25 @@
+<!--
+/**
+* DISCLAIMER
+*
+* Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
+* versions in the future.
+*
+*
+* @category  Smile
+ * @package   Smile\ElasticsuiteRetailer
+* @author    Fanny DECLERCK <fadec@smile.fr>
+* @copyright 2018 Smile
+* @license   Open Software License ("OSL") v. 3.0
+*/
+-->
+<?php /** @var  \Smile\ElasticsuiteRetailer\Block\Result $block */?>
+<div class="search results">
+    <h2><?php echo __('Results in retailers.')?></h2>
+
+    <ul>
+        <?php foreach ($block->getRetailerCollection() as $currentRetailer) : ?>
+            <li><a href="<?php echo $block->getRetailerUrl($currentRetailer)?>"><?php echo $currentRetailer->getName(); ?></a></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
