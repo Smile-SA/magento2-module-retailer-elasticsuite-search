@@ -33,6 +33,13 @@ class Configuration extends AbstractConfiguration
     const CONFIG_XML_PREFIX = 'smile_elasticsuite_retailer/retailer_settings';
 
     /**
+     * Location of Elasticsuite retailer field indexed configuration.
+     *
+     * @var string
+     */
+    const FIELD_INDEXED_XML_PREFIX = 'smile_elasticsuite_retailer/retailer_field_index';
+
+    /**
      * Retrieve a configuration value by its key
      *
      * @param string $key The configuration key
@@ -42,5 +49,17 @@ class Configuration extends AbstractConfiguration
     public function getConfigValue($key)
     {
         return $this->scopeConfig->getValue(self::CONFIG_XML_PREFIX . "/" . $key);
+    }
+
+    /**
+     * Retrieve if field is indexed
+     *
+     * @param string $field The field
+     *
+     * @return mixed
+     */
+    public function isIndexed($field)
+    {
+        return $this->scopeConfig->getValue(self::FIELD_INDEXED_XML_PREFIX . "/" . $field);
     }
 }

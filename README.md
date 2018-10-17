@@ -30,25 +30,32 @@ The module requires :
 
 ### How to configure
 
-> Stores > Configuration > Elasticsuite > Retailer search settings
+> Stores > Configuration > Elasticsuite > Retailer search settings > Settings
 * Max result : Maximum number of results to display in result block.
 * Enabled suggest bloc on result page : Yes/No
+
+> Stores > Configuration > Elasticsuite > Retailer search settings > Fields indexed
+* Index street : Yes/No
+* Index postcode : Yes/No
+* Index latitude : Yes/No
+* Index longitude : Yes/No
+* Index description : Yes/No
 
 > Stores > Configuration > Elasticsuite > Autocomplete > Retailer Autocomplete
 * Max size : Maximum number of retailers to display in autocomplete results.
 
 ### Fields indexed
 
-Field       | Type
-------------|------------
-retailer_id | Integer
-street      | String
-postcode    | String
-latitude    | String
-longitude   | String
-name        | String
-is_active   | Boolean
-description | Text
+Field       | Type    | Choice to index
+------------|---------|------------------
+retailer_id | Integer | No
+street      | String  | Yes
+postcode    | String  | Yes
+latitude    | String  | Yes
+longitude   | String  | Yes
+name        | String  | No
+is_active   | Boolean | No
+description | Text    | Yes
 
 Index example :
 ```

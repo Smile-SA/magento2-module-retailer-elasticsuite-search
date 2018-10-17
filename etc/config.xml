@@ -27,6 +27,14 @@
                 <max_result>5</max_result>
                 <enabled>1</enabled>
             </retailer_settings>
+            <retailer_field_index>
+                <street>1</street>
+                <postcode>1</postcode>
+                <latitude>1</latitude>
+                <longitude>1</longitude>
+                <name>1</name>
+                <description>1</description>
+            </retailer_field_index>
         </smile_elasticsuite_retailer>
     </default>
 </config>
