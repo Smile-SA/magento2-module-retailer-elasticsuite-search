@@ -30,8 +30,8 @@
             <retailer_field_index>
                 <street>1</street>
                 <postcode>1</postcode>
-                <latitude>1</latitude>
-                <longitude>1</longitude>
+                <latitude>0</latitude>
+                <longitude>0</longitude>
                 <name>1</name>
                 <description>1</description>
             </retailer_field_index>

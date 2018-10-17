@@ -37,6 +37,13 @@ class Suggest extends \Magento\Framework\View\Element\Template
     const MAX_RESULT = 'max_result';
 
     /**
+     * Name of field to get if enable block.
+     *
+     * @var bool
+     */
+    const ENABLE_BLOCK = 'enabled';
+
+    /**
      * @var QueryFactory
      */
     private $queryFactory;
@@ -89,7 +96,7 @@ class Suggest extends \Magento\Framework\View\Element\Template
      */
     public function canShowBlock()
     {
-        return $this->getResultCount() > 0;
+        return $this->getResultCount() > 0 && $this->helper->getConfigValue(self::ENABLE_BLOCK);
     }
 
     /**
