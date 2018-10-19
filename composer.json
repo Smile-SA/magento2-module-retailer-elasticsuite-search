@@ -1,12 +1,12 @@
 {
-    "name": "smile/module-retailer-elasticsuite-search",
+    "name": "smile/magento2-module-retailer-elasticsuite-search",
     "type": "magento2-module",
     "license": "OSL-3.0",
     "authors": [
         {"name": "Fanny DECLERCK", "email": "fadec@smile.fr"}
     ],
     "description": "Smile Elasticsuite - Retailer Search Module for Smile Elasticsuite.",
-    "homepage": "https://github.com/Smile-SA/module-retailer-elasticsuite-search",
+    "homepage": "https://github.com/Smile-SA/magento2-module-retailer-elasticsuite-search",
     "keywords": [
         "magento",
         "magento2",
