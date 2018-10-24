@@ -1,4 +1,4 @@
-## ElasticSuite Seller Search
+## ElasticSuite Retailer Search
 
 This module is a plugin for [ElasticSuite](https://github.com/Smile-SA/elasticsuite).
 
