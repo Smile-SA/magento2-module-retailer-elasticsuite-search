@@ -9,6 +9,8 @@ It allows to index retailers into the search engine and display them into the au
 The module requires :
 
 - [ElasticSuite](https://github.com/Smile-SA/elasticsuite) > 2.1.*
+- [Retailer](https://github.com/Smile-SA/magento2-module-retailer) > 1.2.*
+- [StoreLocator](https://github.com/Smile-SA/magento2-module-store-locator) > 1.3.* || 2.*
 
 ### How to use
 

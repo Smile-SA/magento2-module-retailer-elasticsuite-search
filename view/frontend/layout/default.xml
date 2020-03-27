@@ -26,5 +26,25 @@
                 </argument>
             </arguments>
         </referenceBlock>
+        <referenceBlock name="top.storelocator.chooser" remove="true"/>
+        <referenceContainer name="header-wrapper">
+            <block class="Smile\StoreLocator\Block\StoreChooser" name="top.elasticsuiteretailer.chooser" template="Smile_ElasticsuiteRetailer::chooser.phtml" before="top.search">
+                <arguments>
+                    <argument name="jsLayout" xsi:type="array">
+                        <item name="components" xsi:type="array">
+                            <item name="top-storelocator-chooser" xsi:type="array">
+                                <item name="component" xsi:type="string">Smile_ElasticsuiteRetailer/js/retailer/chooser</item>
+                                <item name="template" xsi:type="string">Smile_ElasticsuiteRetailer/retailer/chooser</item>
+                                <item name="children" xsi:type="array">
+                                    <item name="geocoder" xsi:type="array">
+                                        <item name="component" xsi:type="string">smile-geocoder</item>
+                                    </item>
+                                </item>
+                            </item>
+                        </item>
+                    </argument>
+                </arguments>
+            </block>
+        </referenceContainer>
     </body>
 </page>
