@@ -1,77 +1,49 @@
 <?php
-/**
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2018 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
+
 namespace Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext;
 
+use LogicException;
+use Magento\Eav\Model\Config;
+use Magento\Eav\Model\ResourceModel\Helper;
+use Magento\Framework\Api\Search\Document;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Data\Collection\Db\FetchStrategyInterface;
+use Magento\Framework\Data\Collection\EntityFactory;
+use Magento\Framework\DB\Adapter\AdapterInterface;
+use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Validator\UniversalFactory;
+use Magento\Search\Model\SearchEngine;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 use Smile\ElasticsuiteCore\Search\Adapter\Elasticsuite\Response\QueryResponse;
+use Smile\ElasticsuiteCore\Search\Request\Builder;
 use Smile\ElasticsuiteCore\Search\RequestInterface;
+use Smile\Retailer\Model\Retailer;
+use Smile\Seller\Model\ResourceModel\Seller as SellerResource;
 
 /**
  * Search engine product collection.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
  */
 class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
 {
-    /**
-     * @var QueryResponse
-     */
-    private $queryResponse;
+    private QueryResponse $queryResponse;
 
-    /**
-     * @var \Smile\ElasticsuiteCore\Search\Request\Builder
-     */
-    private $requestBuilder;
+    /** @var string|string[]|null */
+    private string|array|null $queryText = null;
 
-    /**
-     * @var \Magento\Search\Model\SearchEngine
-     */
-    private $searchEngine;
+    private array $filters = [];
 
-    /**
-     * @var string
-     */
-    private $queryText;
-
-    /**
-     * @var string
-     */
-    private $searchRequestName;
-
-    /**
-     * @var array
-     */
-    private $filters = [];
-
-    /**
-     * @var array
-     */
-    private $facets = [];
-
-    /**
-     * @var integer
-     */
-    private $storeId;
+    private array $facets = [];
 
     /**
      * Collection constructor.
      *
      * @SuppressWarnings(PHPMD.ExcessiveParameterList) Parent construct already has 11 arguments.
-     *
      * @param \Magento\Framework\Data\Collection\EntityFactory             $entityFactory     Entity Factory
      * @param \Psr\Log\LoggerInterface                                     $logger            Logger
      * @param \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy     Fetch Strategy
@@ -89,20 +61,20 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
      * @param \Magento\Framework\DB\Adapter\AdapterInterface|null          $connection        Database Connection
      */
     public function __construct(
-        \Magento\Framework\Data\Collection\EntityFactory $entityFactory,
-        \Psr\Log\LoggerInterface $logger,
-        \Magento\Framework\Data\Collection\Db\FetchStrategyInterface $fetchStrategy,
-        \Magento\Framework\Event\ManagerInterface $eventManager,
-        \Magento\Eav\Model\Config $eavConfig,
-        \Magento\Framework\App\ResourceConnection $resource,
+        EntityFactory $entityFactory,
+        LoggerInterface $logger,
+        FetchStrategyInterface $fetchStrategy,
+        ManagerInterface $eventManager,
+        Config $eavConfig,
+        ResourceConnection $resource,
         \Magento\Eav\Model\EntityFactory $eavEntityFactory,
-        \Magento\Eav\Model\ResourceModel\Helper $resourceHelper,
-        \Magento\Store\Model\StoreManagerInterface $storeManager,
-        \Magento\Framework\Validator\UniversalFactory $universalFactory,
-        \Smile\ElasticsuiteCore\Search\Request\Builder $requestBuilder,
-        \Magento\Search\Model\SearchEngine $searchEngine,
-        $searchRequestName = 'retailer_search_container',
-        \Magento\Framework\DB\Adapter\AdapterInterface $connection = null
+        Helper $resourceHelper,
+        StoreManagerInterface $storeManager,
+        UniversalFactory $universalFactory,
+        private Builder $requestBuilder,
+        private SearchEngine $searchEngine,
+        private string $searchRequestName = 'retailer_search_container',
+        ?AdapterInterface $connection = null
     ) {
         parent::__construct(
             $entityFactory,
@@ -117,14 +89,10 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
             $universalFactory,
             $connection
         );
-
-        $this->requestBuilder    = $requestBuilder;
-        $this->searchEngine      = $searchEngine;
-        $this->searchRequestName = $searchRequestName;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
     public function getSize()
     {
@@ -136,35 +104,11 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
-    public function setOrder($attribute, $dir = \Zend_Db_Select::SQL_DESC)
+    public function setOrder($attribute, $dir = self::SORT_ORDER_DESC)
     {
-        throw new \LogicException("Sorting on multiple stores is not allowed in search engine collections.");
-    }
-
-    /**
-     * Add filter by store
-     *
-     * @param int|array|\Magento\Store\Model\Store $storeId Store id
-     *
-     * @return $this
-     */
-    public function setStoreId($storeId)
-    {
-        $this->storeId = $storeId;
-
-        return $this;
-    }
-
-    /**
-     * Returns current store id.
-     *
-     * @return int
-     */
-    public function getStoreId()
-    {
-        return $this->storeId;
+        throw new LogicException("Sorting on multiple stores is not allowed in search engine collections.");
     }
 
     /**
@@ -172,33 +116,32 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
      *
      * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Method is inherited
      * @SuppressWarnings(PHPMD.UnusedFormalParameter) Method is inherited
-     *
-     * @param int|array|\Magento\Store\Model\Store $store     Store
-     * @param bool                                 $withAdmin With admin
-     *
+     * @param int|string|array|Store $store     Store
+     * @param bool                   $withAdmin With admin
      * @return $this
      */
-    public function addStoreFilter($store, $withAdmin = true)
+    public function addStoreFilter(mixed $store, bool $withAdmin = true): self
     {
         if (is_object($store)) {
             $store = $store->getId();
         }
 
         if (is_array($store)) {
-            throw new \LogicException("Filtering on multiple stores is not allowed in search engine collections.");
+            throw new LogicException("Filtering on multiple stores is not allowed in search engine collections.");
         }
 
-        return $this->setStoreId($store);
+        $this->setStoreId($store);
+
+        return $this;
     }
 
     /**
      * Add search query filter
      *
-     * @param string $query Search query text.
-     *
-     * @return \Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection
+     * @param string|string[] $query Search query text (or list of terms).
+     * @return $this
      */
-    public function addSearchFilter($query)
+    public function addSearchFilter(string|array $query): self
     {
         $this->queryText = $query;
 
@@ -206,7 +149,7 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
     public function addFieldToFilter($field, $condition = null)
     {
@@ -219,34 +162,34 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
      * Redefined to delete filter attribute_set_id
      *
      * @SuppressWarnings(PHPMD.CamelCaseMethodName)
-     *
-     * {@inheritDoc}
+     * @inheritdoc
      */
     protected function _construct()
     {
-        $this->_init('Smile\Retailer\Model\Retailer', 'Smile\Seller\Model\ResourceModel\Seller');
+        $this->_init(Retailer::class, SellerResource::class);
     }
 
     /**
+     * @inheritdoc
      * @SuppressWarnings(PHPMD.CamelCaseMethodName)
-     *
-     * {@inheritdoc}
      */
     protected function _renderFiltersBefore()
     {
         $searchRequest = $this->prepareRequest();
 
-        $this->queryResponse = $this->searchEngine->search($searchRequest);
+        /** @var QueryResponse $queryResponse */
+        $queryResponse = $this->searchEngine->search($searchRequest);
+        $this->queryResponse = $queryResponse;
 
         // Update the product count.
         $this->_totalRecords = $this->queryResponse->count();
 
         // Filter search results. The pagination has to be resetted since it is managed by the engine itself.
         $docIds = array_map(
-            function (\Magento\Framework\Api\Search\Document $doc) {
+            function (Document $doc) {
                 return (int) $doc->getId();
             },
-            $this->queryResponse->getIterator()->getArrayCopy()
+            iterator_to_array($this->queryResponse->getIterator())
         );
 
         if (empty($docIds)) {
@@ -258,9 +201,8 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
     }
 
     /**
+     * @inheritdoc
      * @SuppressWarnings(PHPMD.CamelCaseMethodName)
-     *
-     * {@inheritDoc}
      */
     protected function _afterLoad()
     {
@@ -272,7 +214,7 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
             $documentId = $document->getId();
             if (isset($orginalItems[$documentId])) {
                 $this->_items[$documentId] = $orginalItems[$documentId];
-                $this->_items[$documentId]->setStoreId($this->storeId);
+                $this->_items[$documentId]->setStoreId($this->getStoreId());
             }
         }
 
@@ -281,13 +223,11 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
 
     /**
      * Prepare the search request before it will be executed.
-     *
-     * @return RequestInterface
      */
-    private function prepareRequest()
+    private function prepareRequest(): RequestInterface
     {
         // Store id and request name.
-        $storeId           = $this->storeId;
+        $storeId           = $this->getStoreId();
         $searchRequestName = $this->searchRequestName;
 
         // Pagination params.
@@ -316,10 +256,8 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
 
     /**
      * Prepare sort orders for the request builder.
-     *
-     * @return array()
      */
-    private function prepareSortOrders()
+    private function prepareSortOrders(): array
     {
         $sortOrders = [];
 
@@ -337,10 +275,8 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
      * (eg. category_ids => category.category_id).
      *
      * @param string $fieldName Field name to be mapped.
-     *
-     * @return string
      */
-    private function mapFieldName($fieldName)
+    private function mapFieldName(string $fieldName): string
     {
         if (isset($this->fieldNameMapping[$fieldName])) {
             $fieldName = $this->fieldNameMapping[$fieldName];
@@ -351,10 +287,8 @@ class Collection extends \Smile\Retailer\Model\ResourceModel\Retailer\Collection
 
     /**
      * Load retailer collection size.
-     *
-     * @return void
      */
-    private function loadRetailersCounts()
+    private function loadRetailersCounts(): void
     {
         $storeId     = $this->getStoreId();
         $requestName = $this->searchRequestName;

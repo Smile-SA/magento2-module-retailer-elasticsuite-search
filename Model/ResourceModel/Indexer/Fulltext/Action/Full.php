@@ -1,43 +1,20 @@
 <?php
-/**
- * DISCLAIMER
- * Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2018 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
 
 namespace Smile\ElasticsuiteRetailer\Model\ResourceModel\Indexer\Fulltext\Action;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Store\Model\StoreManagerInterface;
 use Smile\ElasticsuiteCore\Model\ResourceModel\Indexer\AbstractIndexer;
-use Smile\Seller\Api\AttributeRepositoryInterface;
 use Smile\ElasticsuiteRetailer\Helper\Configuration;
+use Smile\Seller\Api\AttributeRepositoryInterface;
 
 /**
  * ElasticSearch retailer full indexer resource model.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
  */
 class Full extends AbstractIndexer
 {
-    /**
-     * @var AttributeRepositoryInterface
-     */
-    private $attributeRepository;
-
-    /**
-     * @var Configuration
-     */
-    private $helper;
-
     /**
      * Full constructor.
      *
@@ -49,24 +26,20 @@ class Full extends AbstractIndexer
     public function __construct(
         ResourceConnection $resource,
         StoreManagerInterface $storeManager,
-        AttributeRepositoryInterface $attributeRepository,
-        Configuration $helper
+        private AttributeRepositoryInterface $attributeRepository,
+        private Configuration $helper
     ) {
-        $this->attributeRepository = $attributeRepository;
-        $this->helper              = $helper;
         parent::__construct($resource, $storeManager);
     }
 
     /**
      * Load a bulk of retailer data.
      *
-     * @param string  $retailerIds Retailer ids filter.
-     * @param integer $fromId      Load product with id greater than.
-     * @param integer $limit       Number of product to get loaded.
-     *
-     * @return array
+     * @param int[]|null $retailerIds Retailer ids filter.
+     * @param int        $fromId      Load retailers with id greater than.
+     * @param int        $limit       Number of retailers to get loaded.
      */
-    public function getSearchableRetailer($retailerIds = null, $fromId = 0, $limit = 100)
+    public function getSearchableRetailer(?array $retailerIds = null, int $fromId = 0, int $limit = 100): array
     {
         $fieldToSelect = ['retailer_id'];
 
