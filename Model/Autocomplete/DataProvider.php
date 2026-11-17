@@ -1,85 +1,49 @@
 <?php
-/**
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2018 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
+
 namespace Smile\ElasticsuiteRetailer\Model\Autocomplete;
 
 use Magento\Search\Model\Autocomplete\DataProviderInterface;
-use Magento\Search\Model\QueryFactory;
 use Magento\Search\Model\Autocomplete\ItemFactory;
+use Magento\Search\Model\Autocomplete\ItemInterface;
+use Magento\Search\Model\QueryFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use Smile\ElasticsuiteCore\Helper\Autocomplete as ConfigurationHelper;
 use Smile\ElasticsuiteCore\Model\Autocomplete\Terms\DataProvider as TermDataProvider;
+use Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection;
 use Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\CollectionFactory as RetailerCollectionFactory;
+use Smile\StoreLocator\Helper\Data;
 
 /**
  * Retailer autocomplete data provider.
- *
- * @category Smile
- * @package  Smile\ElasticsuiteRetailer
- * @author   Fanny DECLERCK <fadec@smile.fr>
  */
 class DataProvider implements DataProviderInterface
 {
     /**
      * Autocomplete type
      */
-    const AUTOCOMPLETE_TYPE = "retailer";
+    public const AUTOCOMPLETE_TYPE = "retailer";
 
     /**
      * Autocomplete result item factory
-     *
-     * @var ItemFactory
      */
-    protected $itemFactory;
+    protected ItemFactory $itemFactory;
 
     /**
      * Query factory
-     *
-     * @var QueryFactory
      */
-    protected $queryFactory;
-
-    /**
-     * @var TermDataProvider
-     */
-    protected $termDataProvider;
-
-    /**
-     * @var RetailerCollectionFactory
-     */
-    protected $retailerCollectionFactory;
-
-    /**
-     * @var ConfigurationHelper
-     */
-    protected $configurationHelper;
+    protected QueryFactory $queryFactory;
 
     /**
      * Store manager
-     *
-     * @var \Magento\Store\Model\StoreManagerInterface
      */
-    protected $storeManager;
+    protected StoreManagerInterface $storeManager;
 
     /**
      * @var string Autocomplete result type
      */
-    private $type;
-
-    /**
-     * @var \Smile\StoreLocator\Helper\Data
-     */
-    protected $storeLocatorHelper;
+    private string $type;
 
     /**
      * Constructor.
@@ -96,47 +60,41 @@ class DataProvider implements DataProviderInterface
     public function __construct(
         ItemFactory $itemFactory,
         QueryFactory $queryFactory,
-        TermDataProvider $termDataProvider,
-        RetailerCollectionFactory $retailerCollectionFactory,
-        ConfigurationHelper $configurationHelper,
+        protected TermDataProvider $termDataProvider,
+        protected RetailerCollectionFactory $retailerCollectionFactory,
+        protected ConfigurationHelper $configurationHelper,
         StoreManagerInterface $storeManager,
-        \Smile\StoreLocator\Helper\Data $storeLocatorHelper,
-        $type = self::AUTOCOMPLETE_TYPE
+        protected Data $storeLocatorHelper,
+        string $type = self::AUTOCOMPLETE_TYPE
     ) {
         $this->itemFactory          = $itemFactory;
         $this->queryFactory         = $queryFactory;
-        $this->termDataProvider     = $termDataProvider;
-        $this->retailerCollectionFactory = $retailerCollectionFactory;
-        $this->configurationHelper  = $configurationHelper;
         $this->type                 = $type;
         $this->storeManager         = $storeManager;
-        $this->storeLocatorHelper   = $storeLocatorHelper;
     }
+
     /**
-     * @return string
+     * @inheritdoc
      */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
     public function getItems()
     {
         $result = [];
-        $retailerCollection = $this->getRetailerCollection();
-        if ($retailerCollection) {
-            foreach ($retailerCollection as $retailer) {
-                $result[] = $this->itemFactory->create(
-                    [
-                        'title' => $retailer->getName(),
-                        'url'   => $this->storeLocatorHelper->getRetailerUrl($retailer),
-                        'type'  => $this->getType(),
-                    ]
-                );
-            }
+        foreach ($this->getRetailerCollection() as $retailer) {
+            $result[] = $this->itemFactory->create(
+                [
+                    'title' => $retailer->getName(),
+                    'url'   => $this->storeLocatorHelper->getRetailerUrl($retailer),
+                    'type'  => $this->getType(),
+                ]
+            );
         }
 
         return $result;
@@ -144,13 +102,11 @@ class DataProvider implements DataProviderInterface
 
     /**
      * List of search terms suggested by the search terms data daprovider.
-     *
-     * @return array
      */
-    private function getSuggestedTerms()
+    private function getSuggestedTerms(): array
     {
         $terms = array_map(
-            function (\Magento\Search\Model\Autocomplete\Item $termItem) {
+            function (ItemInterface $termItem) {
                 return $termItem->getTitle();
             },
             $this->termDataProvider->getItems()
@@ -161,14 +117,11 @@ class DataProvider implements DataProviderInterface
 
     /**
      * Suggested retailer collection.
-     * Returns null if no suggested search terms.
      *
-     * @return \Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection|null
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    private function getRetailerCollection()
+    private function getRetailerCollection(): Collection
     {
-        $retailerCollection = null;
         $suggestedTerms = $this->getSuggestedTerms();
         $terms          = [$this->queryFactory->get()->getQueryText()];
 
@@ -186,10 +139,8 @@ class DataProvider implements DataProviderInterface
 
     /**
      * Retrieve number of retailers to display in autocomplete results
-     *
-     * @return int
      */
-    private function getResultsPageSize()
+    private function getResultsPageSize(): int
     {
         return $this->configurationHelper->getMaxSize($this->getType());
     }

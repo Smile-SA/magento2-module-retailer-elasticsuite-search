@@ -1,57 +1,23 @@
 <?php
-/**
- * DISCLAIMER
- * Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2018 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
+
 namespace Smile\ElasticsuiteRetailer\Model\Indexer;
 
-use Magento\Framework\Search\Request\DimensionFactory;
-use Magento\Framework\Indexer\SaveHandler\IndexerInterface;
-use Magento\Store\Model\StoreManagerInterface;
+use ArrayIterator;
 use Magento\Framework\Indexer\ActionInterface;
+use Magento\Framework\Indexer\SaveHandler\IndexerInterface;
 use Magento\Framework\Mview\ActionInterface as MviewActionInterface;
+use Magento\Framework\Search\Request\DimensionFactory;
+use Magento\Store\Model\StoreManagerInterface;
 use Smile\ElasticsuiteRetailer\Model\Indexer\Fulltext\Action\Full;
 
 /**
  * Retailers fulltext indexer
- *
- * @category Smile
- * @package  Smile\ElasticsuiteRetailer
- * @author   Fanny DECLERCK <fadec@smile.fr>
  */
 class Fulltext implements ActionInterface, MviewActionInterface
 {
-    /**
-     * @var string
-     */
-    const INDEXER_ID = 'elasticsuite_retailer_fulltext';
-
-    /**
-     * @var IndexerInterface
-     */
-    private $indexerHandler;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var DimensionFactory
-     */
-    private $dimensionFactory;
-
-    /**
-     * @var Full
-     */
-    private $fullAction;
+    public const INDEXER_ID = 'elasticsuite_retailer_fulltext';
 
     /**
      * @param Full                  $fullAction       The full index action
@@ -60,40 +26,32 @@ class Fulltext implements ActionInterface, MviewActionInterface
      * @param DimensionFactory      $dimensionFactory The dimension factory
      */
     public function __construct(
-        Full $fullAction,
-        IndexerInterface $indexerHandler,
-        StoreManagerInterface $storeManager,
-        DimensionFactory $dimensionFactory
+        private Full $fullAction,
+        private IndexerInterface $indexerHandler,
+        private StoreManagerInterface $storeManager,
+        private DimensionFactory $dimensionFactory
     ) {
-        $this->fullAction = $fullAction;
-        $this->indexerHandler = $indexerHandler;
-        $this->storeManager = $storeManager;
-        $this->dimensionFactory = $dimensionFactory;
     }
 
     /**
      * Execute materialization on ids entities
      *
      * @param int[] $ids The ids
-     *
-     * @return void
      */
-    public function execute($ids)
+    public function execute($ids): void // phpcs:ignore SlevomatCodingStandard.TypeHints.ParameterTypeHint
     {
         $storeIds = array_keys($this->storeManager->getStores());
         foreach ($storeIds as $storeId) {
             $dimension = $this->dimensionFactory->create(['name' => 'scope', 'value' => $storeId]);
-            $this->indexerHandler->deleteIndex([$dimension], new \ArrayObject($ids));
+            $this->indexerHandler->deleteIndex([$dimension], new ArrayIterator($ids));
             $this->indexerHandler->saveIndex([$dimension], $this->fullAction->rebuildStoreIndex($ids));
         }
     }
 
     /**
      * Execute full indexation
-     *
-     * @return void
      */
-    public function executeFull()
+    public function executeFull(): void
     {
         $storeIds = array_keys($this->storeManager->getStores());
         foreach ($storeIds as $storeId) {
@@ -104,7 +62,7 @@ class Fulltext implements ActionInterface, MviewActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
     public function executeList(array $retailerIds)
     {
@@ -112,7 +70,7 @@ class Fulltext implements ActionInterface, MviewActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritdoc
      */
     public function executeRow($retailerId)
     {

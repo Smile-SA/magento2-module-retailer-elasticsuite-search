@@ -13,13 +13,20 @@
 * @license   Open Software License ("OSL") v. 3.0
 */
 -->
-<?php /** @var  \Smile\ElasticsuiteRetailer\Block\Result $block */?>
+<?php
+/** @var \Smile\ElasticsuiteRetailer\Block\Result $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
 <div class="search results">
-    <h2><?php echo __('Results in retailers.')?></h2>
+    <h2><?= $escaper->escapeHtml(__('Results in retailers.')) ?></h2>
 
     <ul>
-        <?php foreach ($block->getRetailerCollection() as $currentRetailer) : ?>
-            <li><a href="<?php echo $block->getRetailerUrl($currentRetailer)?>"><?php echo $currentRetailer->getName(); ?></a></li>
+        <?php foreach ($block->getRetailerCollection() as $currentRetailer): ?>
+            <li>
+                <a href="<?= $escaper->escapeUrl($block->getRetailerUrl($currentRetailer)) ?>">
+                    <?= $escaper->escapeHtml($currentRetailer->getName()) ?>
+                </a>
+            </li>
         <?php endforeach; ?>
     </ul>
 </div>

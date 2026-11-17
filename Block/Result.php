@@ -1,47 +1,26 @@
 <?php
-/**
- * DISCLAIMER
- * Do not edit or add to this file if you wish to upgrade Smile Elastic Suite to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2018 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
+
 namespace Smile\ElasticsuiteRetailer\Block;
 
+use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context as TemplateContext;
+use Magento\Search\Model\Query;
 use Magento\Search\Model\QueryFactory;
+use Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection;
 use Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\CollectionFactory as RetailerCollectionFactory;
 use Smile\Retailer\Api\Data\RetailerInterface;
+use Smile\StoreLocator\Helper\Data;
 
 /**
  * Custom implementation of the result block to apply on products page.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- *
- * @category Smile
- * @package  Smile\ElasticsuiteRetailer
- * @author   Fanny DECLERCK <fadec@smile.fr>
  */
-class Result extends \Magento\Framework\View\Element\Template
+class Result extends Template
 {
-    /**
-     * @var QueryFactory
-     */
-    private $queryFactory;
-
-    /**
-     * @var \Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection
-     */
-    private $retailerCollection;
-
-    /**
-     * @var \Smile\StoreLocator\Helper\Data
-     */
-    protected $storeLocatorHelper;
+    private Collection $retailerCollection;
 
     /**
      * Suggest constructor.
@@ -54,54 +33,47 @@ class Result extends \Magento\Framework\View\Element\Template
      */
     public function __construct(
         TemplateContext $context,
-        QueryFactory $queryFactory,
+        private QueryFactory $queryFactory,
         RetailerCollectionFactory $retailerCollectionFactory,
-        \Smile\StoreLocator\Helper\Data $storeLocatorHelper,
+        protected Data $storeLocatorHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
 
-        $this->queryFactory       = $queryFactory;
         $this->retailerCollection = $this->initRetailerCollection($retailerCollectionFactory);
-        $this->storeLocatorHelper = $storeLocatorHelper;
     }
 
     /**
      * Returns retailer collection.
-     *
-     * @return \Smile\ElasticsuiteRetailer\Model\ResourceModel\Fulltext\Collection
      */
-    public function getRetailerCollection()
+    public function getRetailerCollection(): Collection
     {
         return $this->retailerCollection;
     }
 
     /**
      * Returns collection size.
-     *
-     * @return int|null
      */
-    public function getResultCount()
+    public function getResultCount(): ?int
     {
         return $this->getRetailerCollection()->getSize();
     }
 
     /**
      * Returns query.
-     *
-     * @return \Magento\Search\Model\Query
      */
-    public function getQuery()
+    public function getQuery(): Query
     {
-        return $this->queryFactory->get();
+        /** @var Query $query */
+        $query = $this->queryFactory->get();
+
+        return $query;
     }
 
     /**
      * Returns query text.
-     *
-     * @return string
      */
-    public function getQueryText()
+    public function getQueryText(): string
     {
         return $this->getQuery()->getQueryText();
     }
@@ -110,10 +82,8 @@ class Result extends \Magento\Framework\View\Element\Template
      * Returns retailer url.
      *
      * @param RetailerInterface $retailer Retailer
-     *
-     * @return string
      */
-    public function getRetailerUrl(RetailerInterface $retailer)
+    public function getRetailerUrl(RetailerInterface $retailer): string
     {
         return $this->storeLocatorHelper->getRetailerUrl($retailer);
     }
@@ -122,11 +92,9 @@ class Result extends \Magento\Framework\View\Element\Template
      * Init retailer collection.
      *
      * @param RetailerCollectionFactory $collectionFactory Retailer collection.
-     *
-     * @return mixed
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    private function initRetailerCollection($collectionFactory)
+    private function initRetailerCollection(RetailerCollectionFactory $collectionFactory): Collection
     {
         $retailerCollection = $collectionFactory->create();
 

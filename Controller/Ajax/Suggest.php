@@ -1,52 +1,36 @@
 <?php
-/**
- * DISCLAIMER
- * Do not edit or add to this file if you wish to upgrade this module to newer
- * versions in the future.
- *
- * @category  Smile
- * @package   Smile\ElasticsuiteRetailer
- * @author    Fanny DECLERCK <fadec@smile.fr>
- * @copyright 2020 Smile
- * @license   Open Software License ("OSL") v. 3.0
- */
+
+declare(strict_types=1);
+
 namespace Smile\ElasticsuiteRetailer\Controller\Ajax;
 
-use Magento\Framework\App\Action\HttpGetActionInterface as HttpGetActionInterface;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
 use Smile\ElasticsuiteRetailer\Model\Autocomplete\DataProvider;
+
 /**
  * Suggest action
- *
- * @category Smile
- * @package  Smile\ElasticsuiteRetailer
- * @author   Fanny DECLERCK <fadec@smile.fr>
  */
 class Suggest extends Action implements HttpGetActionInterface
 {
     /**
-     * @var DataProvider
-     */
-    protected $dataProvider;
-
-    /**
-     * @param \Magento\Framework\App\Action\Context $context
-     * @param DataProvider                          $dataProvider
+     * @param Context      $context      Context
+     * @param DataProvider $dataProvider Retailer autocomplete data provider
      */
     public function __construct(
         Context $context,
-        DataProvider $dataProvider
+        protected DataProvider $dataProvider
     ) {
-        $this->dataProvider = $dataProvider;
         parent::__construct($context);
     }
 
     /**
-     * @return \Magento\Framework\Controller\ResultInterface
+     * @inheritdoc
      */
-    public function execute()
+    public function execute(): ResultInterface
     {
         if (!$this->getRequest()->getParam('q', false)) {
             /** @var \Magento\Framework\Controller\Result\Redirect $resultRedirect */
@@ -55,7 +39,7 @@ class Suggest extends Action implements HttpGetActionInterface
             return $resultRedirect;
         }
 
-        $autocompleteData = $this->dataProvider->getItems($this->getRequest()->getParam('q'));
+        $autocompleteData = $this->dataProvider->getItems();
         $responseData = [];
         foreach ($autocompleteData as $resultItem) {
             $responseData[] = $resultItem->toArray();
